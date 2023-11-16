@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Access within AWS Compute</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Access within AWS Compute</h1>
+
+
+
+<p>If you have access to machine running inside Amazon
+<code>us-west-2</code> (e.g. a NASA <a href="https://nasa-openscapes.github.io/">Openscapes</a> JupyterHub or
+the ability to create a VM in EC2 using this compute region), you will
+be able to access NOAA EarthData using the S3 interface. This may offer
+slightly better performance than using the universal https interface
+which routes data through a proxy, but is rarely necessary. This
+approach is documented only for the sake of completeness. Use the http
+interface whenever possible!</p>
+<p>(In future, this mechanism may also work with private S3 credentials
+in a ‘requester-pays’ model, charging for data egress rather than
+compute. For more context on access mechanisms for NASA EarthData see
+the <a href="https://boettiger-lab.github.io/earthdatalogin/articles/motivations.html">motivations</a>
+vignette).</p>
+<p>Authentication via the S3 mechanism is an alternative to
+authentication via Bearer tokens over the http interface. Do
+<em>not</em> use <code>edl_set_token()</code>, you may want to use
+<code>edl_unset_token()</code> to ensure only one mechanism is in
+use.</p>
+<p>There are three important issues to keep in mind if you ever chose to
+use the S3 token mechanism to access EarthData. (Please note that again
+these issues are specific to EarthData due to concerns about billing,
+and do not represent general statements about working with spatial data
+on the S3 protocol more generally!) Unlike the https mechanism,
+EarthData S3 authentication tokens:</p>
+<ul>
+<li>Can only be used from a machine inside <code>us-west-2</code> data
+center</li>
+<li>Expire after 1 hr and must be renewed</li>
+<li>Are specific to each DAAC</li>
+</ul>
+<p>(Please note that these restrictions are more-or-less specific to how
+NASA has configured access to their AWS buckets. S3 tokens are widely
+used to access all kinds of data in various workflows, but these
+restrictions are rarely put in place.)</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(earthdatalogin)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(rstac)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(gdalcubes)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">gdalcubes_options</span>(<span class="at">parallel =</span> <span class="cn">TRUE</span>) </span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">gdal_cloud_config</span>()</span></code></pre></div>
+<div id="earth-data-authentication" class="section level3">
+<h3>Earth Data Authentication</h3>
+<p>To create our S3 tokens, we use <code>edl_s3_token</code>. Note that
+we must specify the endpoint of the DAAC we are trying to access –
+e.g. the LP DAAC in this case. <em>Remember</em>, this token will only
+work from within the <code>us-west-2</code> hub, only for LP DAAC data,
+and will expire 1 hr after it is issued.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">edl_s3_token</span>(<span class="at">daac =</span> <span class="st">&quot;https://data.lpdaac.earthdatacloud.nasa.gov&quot;</span>)</span></code></pre></div>
+<p>We can search the STAC API as in any other case. This step does not
+require any authentication.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>bbox <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">xmin=</span><span class="sc">-</span><span class="fl">122.5</span>, <span class="at">ymin=</span><span class="fl">37.5</span>, <span class="at">xmax=</span><span class="sc">-</span><span class="fl">122.0</span>, <span class="at">ymax=</span><span class="dv">38</span>) </span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>start <span class="ot">&lt;-</span> <span class="st">&quot;2022-01-01&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>end <span class="ot">&lt;-</span> <span class="st">&quot;2022-06-30&quot;</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co"># Find all assets from the desired catalog:</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>items <span class="ot">&lt;-</span> <span class="fu">stac</span>(<span class="st">&quot;https://cmr.earthdata.nasa.gov/stac/LPCLOUD&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="fu">stac_search</span>(<span class="at">collections =</span> <span class="st">&quot;HLSL30.v2.0&quot;</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>              <span class="at">bbox =</span> bbox,</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>              <span class="at">datetime =</span> <span class="fu">paste</span>(start,end, <span class="at">sep =</span> <span class="st">&quot;/&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="fu">post_request</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="fu">items_fetch</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="fu">items_filter</span>(<span class="at">filter_fn =</span> \(x) {x[[<span class="st">&quot;eo:cloud_cover&quot;</span>]] <span class="sc">&lt;</span> <span class="dv">20</span>})</span></code></pre></div>
+<p>The STAC search returns item metadata including links to the data
+object as https URLs. While these are ideal for the bearer token access,
+we want to convert these to S3-style addresses. The function
+<code>gdalcubes::stac_image_collection()</code> actually takes an
+optional argument for how URLs should be handled. The helper function
+<code>edl_as_s3()</code> provides a convenient way to do this (a trivial
+step, we just remove the domain name and replace it with GDAL’s S3
+prefix, <code>/vsis3</code>):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>col <span class="ot">&lt;-</span> </span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="fu">stac_image_collection</span>(items<span class="sc">$</span>features, </span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>                        <span class="at">asset_names =</span> <span class="fu">c</span>(<span class="st">&quot;B02&quot;</span>, <span class="st">&quot;B03&quot;</span>, <span class="st">&quot;B04&quot;</span>, <span class="st">&quot;Fmask&quot;</span>),</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>                        <span class="at">url_fun =</span> \(url) <span class="fu">edl_as_s3</span>(url, <span class="at">prefix =</span> <span class="st">&quot;/vsis3/&quot;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Desired data cube shape &amp; resolution</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>v <span class="ot">=</span> <span class="fu">cube_view</span>(<span class="at">srs =</span> <span class="st">&quot;EPSG:4326&quot;</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>              <span class="at">extent =</span> <span class="fu">list</span>(<span class="at">t0 =</span> <span class="fu">as.character</span>(start), </span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>                            <span class="at">t1 =</span> <span class="fu">as.character</span>(end),</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>                            <span class="at">left =</span> bbox[<span class="dv">1</span>], <span class="at">right =</span> bbox[<span class="dv">3</span>],</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>                            <span class="at">top =</span> bbox[<span class="dv">4</span>], <span class="at">bottom =</span> bbox[<span class="dv">2</span>]),</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>                <span class="at">nx =</span> <span class="dv">2048</span>, <span class="at">ny =</span> <span class="dv">2048</span>, <span class="at">dt =</span> <span class="st">&quot;P1M&quot;</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>cloud_mask <span class="ot">&lt;-</span> <span class="fu">image_mask</span>(<span class="st">&quot;Fmask&quot;</span>, <span class="at">values=</span><span class="dv">1</span>) <span class="co"># mask clouds and cloud shadows</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>rgb_bands <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;B04&quot;</span>,<span class="st">&quot;B03&quot;</span>, <span class="st">&quot;B02&quot;</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co"># Here we go! note eval is lazy</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="fu">raster_cube</span>(col, v, <span class="at">mask=</span>cloud_mask) <span class="sc">|&gt;</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="fu">select_bands</span>(rgb_bands) <span class="sc">|&gt;</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="at">rgb=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>)</span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
