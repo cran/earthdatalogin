@@ -1,9 +1,16 @@
 Package: earthdatalogin
 Title: NASA 'EarthData' Login Utilities
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: 
-  person("Carl", "Boettiger", , "cboettig@gmail.com", c("aut", "cre"),
-         comment = c(ORCID = "0000-0002-1642-628X"))
+  c(person(given = "Carl", family = "Boettiger", , "cboettig@gmail.com", c("aut", "cre", "cph"),
+         comment = c(ORCID = "0000-0002-1642-628X")),
+    person("Luis", "López", role = "aut",
+         comment = c(ORCID = "0000-0003-4896-3263")),
+    person("Yuvi", "Panda", role = "aut"),
+    person("Bri", "Lind", role = "aut",
+         comment = c(ORCID = "0000-0002-5306-9963")),
+    person("Openscapes", role = "fnd")
+         )
 Description: Providing easy, portable access to NASA 'EarthData' products
   through the use of bearer tokens. Much of NASA's public data catalogs hosted
   and maintained by its 12 Distributed Active Archive Centers ('DAACs') are
@@ -24,16 +31,21 @@ Encoding: UTF-8
 RoxygenNote: 7.2.3
 Imports: httr, openssl, purrr, utils
 Suggests: knitr, rmarkdown, terra (>= 1.7.39), rsconnect, testthat (>=
-        3.0.0), curl, sf, fs, readr, spelling
+        3.0.0), curl, sf, fs, readr, spelling, gdalcubes
 URL: https://boettiger-lab.github.io/earthdatalogin/,
-        https://github.com/cboettig/duckdbfs
-BugReports: https://github.com/cboettig/duckdbfs/issues
+        https://github.com/boettiger-lab/earthdatalogin
+BugReports: https://github.com/boettiger-lab/earthdatalogin/issues
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
 NeedsCompilation: no
-Packaged: 2023-11-16 19:04:29 UTC; cboettig
-Author: Carl Boettiger [aut, cre] (<https://orcid.org/0000-0002-1642-628X>)
+Packaged: 2023-12-15 06:33:10 UTC; cboettig
+Author: Carl Boettiger [aut, cre, cph]
+    (<https://orcid.org/0000-0002-1642-628X>),
+  Luis López [aut] (<https://orcid.org/0000-0003-4896-3263>),
+  Yuvi Panda [aut],
+  Bri Lind [aut] (<https://orcid.org/0000-0002-5306-9963>),
+  Openscapes [fnd]
 Maintainer: Carl Boettiger <cboettig@gmail.com>
 Repository: CRAN
-Date/Publication: 2023-11-16 21:20:02 UTC
+Date/Publication: 2023-12-15 06:50:02 UTC

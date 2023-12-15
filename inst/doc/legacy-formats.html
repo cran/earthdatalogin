@@ -367,8 +367,8 @@ catalog on the Planetary Computer STAC</a>.</p>
 <span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="fu">post_request</span>() <span class="sc">|&gt;</span></span>
 <span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="fu">items_fetch</span>()</span>
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="sc">|</span>                                                                            </span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  <span class="er">|======================================================================|</span> <span class="dv">100</span>%</span></code></pre></div>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="sc">|</span>                                                                                                                                                                                                                                                                </span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  <span class="er">|==========================================================================================================================================================================================================================================================|</span> <span class="dv">100</span>%</span></code></pre></div>
 <p>HDF4 doesn’t support cloud (range-request-based) access / VSI.
 Instead, we download all matching assets with
 <code>earthdatalogin</code> authentication:</p>
@@ -378,7 +378,8 @@ Instead, we download all matching assets with
 <span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map_chr</span>(edl_download)</span></code></pre></div>
 <p>Rather than create an image collection using STAC metadata, we can
 use the recognized format and the local paths:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>col <span class="ot">&lt;-</span> gdalcubes<span class="sc">::</span><span class="fu">create_image_collection</span>(paths, <span class="at">format =</span> <span class="st">&quot;MxD13Q1&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>paths <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">dir_ls</span>(<span class="st">&quot;.&quot;</span>, <span class="at">glob=</span><span class="st">&quot;*.hdf&quot;</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>col <span class="ot">&lt;-</span> gdalcubes<span class="sc">::</span><span class="fu">create_image_collection</span>(paths, <span class="at">format =</span> <span class="st">&quot;MxD13Q1&quot;</span>)</span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Define whatever view you like!</span></span>
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>v <span class="ot">=</span> <span class="fu">cube_view</span>(<span class="at">srs =</span> <span class="st">&quot;EPSG:4326&quot;</span>,</span>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>              <span class="at">extent =</span> <span class="fu">list</span>(<span class="at">t0 =</span> <span class="fu">as.character</span>(start), </span>
