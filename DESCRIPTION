@@ -1,6 +1,6 @@
 Package: earthdatalogin
-Title: NASA 'EarthData' Login Utilities
-Version: 0.0.2
+Title: NASA 'EarthData' Access Utilities
+Version: 0.0.3
 Authors@R: 
   c(person(given = "Carl", family = "Boettiger", , "cboettig@gmail.com", c("aut", "cre", "cph"),
          comment = c(ORCID = "0000-0002-1642-628X")),
@@ -9,6 +9,8 @@ Authors@R:
     person("Yuvi", "Panda", role = "aut"),
     person("Bri", "Lind", role = "aut",
          comment = c(ORCID = "0000-0002-5306-9963")),
+    person("Andy", "Teucher", role = "ctb",
+         comment = c(ORCID = "0000-0002-7840-692X")),
     person("Openscapes", role = "fnd")
          )
 Description: Providing easy, portable access to NASA 'EarthData' products
@@ -20,7 +22,7 @@ Description: Providing easy, portable access to NASA 'EarthData' products
   which allows NASA to avoid being charged data egress rates. This package
   provides public access to the data from any networked device by using the 
   'EarthData' login application programming interface (API),
-  <https://www.earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/earthdata-login>,
+  <https://www.earthdata.nasa.gov/data/earthdata-login>,
   providing convenient authentication and access to cloud-hosted NASA 'EarthData'
   products. This makes access to a wide range of earth observation data from 
   any location straight forward and compatible with R packages that are 
@@ -28,10 +30,11 @@ Description: Providing easy, portable access to NASA 'EarthData' products
   'sf', etc.)
 License: MIT + file LICENSE
 Encoding: UTF-8
-RoxygenNote: 7.2.3
-Imports: httr, openssl, purrr, utils
+RoxygenNote: 7.3.2
+Depends: R (>= 4.1.0)
+Imports: httr, openssl, purrr, utils, base64enc, httr2, jsonlite
 Suggests: knitr, rmarkdown, terra (>= 1.7.39), rsconnect, testthat (>=
-        3.0.0), curl, sf, fs, readr, spelling, gdalcubes
+        3.0.0), curl, sf, fs, readr, spelling, gdalcubes, rstac
 URL: https://boettiger-lab.github.io/earthdatalogin/,
         https://github.com/boettiger-lab/earthdatalogin
 BugReports: https://github.com/boettiger-lab/earthdatalogin/issues
@@ -39,13 +42,14 @@ VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
 NeedsCompilation: no
-Packaged: 2023-12-15 06:33:10 UTC; cboettig
-Author: Carl Boettiger [aut, cre, cph]
-    (<https://orcid.org/0000-0002-1642-628X>),
-  Luis López [aut] (<https://orcid.org/0000-0003-4896-3263>),
+Packaged: 2025-07-11 04:00:22 UTC; jovyan
+Author: Carl Boettiger [aut, cre, cph] (ORCID:
+    <https://orcid.org/0000-0002-1642-628X>),
+  Luis López [aut] (ORCID: <https://orcid.org/0000-0003-4896-3263>),
   Yuvi Panda [aut],
-  Bri Lind [aut] (<https://orcid.org/0000-0002-5306-9963>),
+  Bri Lind [aut] (ORCID: <https://orcid.org/0000-0002-5306-9963>),
+  Andy Teucher [ctb] (ORCID: <https://orcid.org/0000-0002-7840-692X>),
   Openscapes [fnd]
 Maintainer: Carl Boettiger <cboettig@gmail.com>
 Repository: CRAN
-Date/Publication: 2023-12-15 06:50:02 UTC
+Date/Publication: 2025-07-11 04:20:02 UTC

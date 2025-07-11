@@ -1,3 +1,22 @@
+# earthdatalogin 0.0.3
+
+* Bugfix for edl_s3_token() (#21), which now requires cookies
+
+* Adds support for listing NASA STAC catalogs with `list_nasa_stacs()` and
+  retrieving specific catalog URLs with `get_nasa_stac_url()` (#19).
+
+* adds experimental support for CMR search with `edl_search()`. Does not support 
+  all use cases, STAC-based search is still recommended.
+
+* Adds `collections_fetch()` for working with the results of a `collections()`
+  query using the [rstac](https://brazil-data-cube.github.io/rstac/) package. The 
+  NASA STAC API by default only return 10 collections for a given catalogue; 
+  this function allows you to retrieve them all (#11).
+  
+* Adds `edl_stac_urls()` for retrieving urls from an `rstac` items list.
+
+* bugfix for default_auth() behavior if credentials are not supplied.
+
 # earthdatalogin 0.0.2
 
 * Adds support for netrc-based authentication. `edl_set_token()` works only
@@ -26,4 +45,3 @@
 # earthdatalogin 0.0.1
 
 * Initial CRAN submission.
-

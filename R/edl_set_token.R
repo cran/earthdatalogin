@@ -70,7 +70,7 @@ edl_set_token <- function (username = default("user"),
 
 
 edl_headerfile <- function(token) {
-  header = edl_header(token)
+  header <- edl_header(token)
   headerfile <- tempfile(pattern="GDAL_HTTP_HEADERS", fileext = "")
   writeLines(header, headerfile)
   invisible(headerfile)
@@ -90,16 +90,16 @@ edl_header <- function(token) {
 
 
 edl_api <- function(endpoint,
-                    username,
-                    password,
+                    username = default("user"),
+                    password = default("password"),
                     ...,
                     base = "https://urs.earthdata.nasa.gov",
                     method = httr::GET) {
 
   pw <- openssl::base64_encode(paste0(username, ":", password))
   resp <- method(paste0(base, endpoint),
-                    ...,
-                    httr::add_headers(Authorization= paste("Basic", pw)))
+  #                  ...,
+                    httr::add_headers(Authorization = paste("Basic", pw)))
   httr::stop_for_status(resp)
   p <- httr::content(resp, "parsed", "application/json")
   p
@@ -184,6 +184,8 @@ edl_revoke_token <- function(
 #' @param items an items list from rstac
 #' @param assets name(s) of assets to extract
 #' @return a vector of hrefs for all discovered assets.
+#'
+#' @export
 #'
 edl_stac_urls <- function(items, assets = "data") {
   purrr::map(items$features, list("assets")) |>

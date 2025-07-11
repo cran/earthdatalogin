@@ -27,7 +27,7 @@ knitr::opts_chunk$set(
 ```{r setup, message=FALSE}
 library(rstac)
 library(gdalcubes)
-gdalcubes_options(parallel = TRUE) 
+gdalcubes_options(parallel = TRUE)
 ```
 
 
@@ -50,20 +50,18 @@ with_gdalcubes()
 
 We will now use the `rstac` package to search one or more NASA collections for data that falls into our desired bounding box of space and time:
 
-```{r include = FALSE}
-# conventions for NASA `stac/` catalog, different from `cloudstac/`
+```{r}
 url <- "https://cmr.earthdata.nasa.gov/stac/LPCLOUD"
 collection <- "HLSL30_2.0"
   
-```
 
-```{r}
 url <- "https://cmr.earthdata.nasa.gov/cloudstac/LPCLOUD"
 collection <- "HLSL30.v2.0"
 
 bbox <- c(xmin=-123, ymin=37.25, xmax=-122.0, ymax=38.25) 
-start <- "2022-01-01T00:00:00Z" # NASA requires this format, other STACs accept date-only
+start <- "2022-01-01T00:00:00Z" # NASA requires this format
 end <- "2022-05-31T00:00:00Z"
+
 
 
 # HLSL30 is landstat-conventions harmonized, HSLS30 is sentinel-conventions in harmonized
@@ -75,19 +73,20 @@ items <- stac(url) |>
   post_request() |>
   items_fetch()
 ```
+```{r}
+href = items$features[[1]]$assets[["B04"]]$href
 
-Currently the NASA metadata is missing projection information from `items$features[[1]]$properties`.  
-We will read the metadata from the COG directly, though this only works if all images in our field are in the same projection.
+library(terra)
+r = terra::rast(href, vsi=TRUE)
+srs = terra::crs(r)
+r
+```
 
 
 ```{r}
-href <- items$features[[1]]$assets[["B04"]]$href
-
-library(terra)
-r <- terra::rast(href, vsi=TRUE)
-srs <- terra::crs(r)
+# crs info missing!
+# items$features[[1]]$properties
 ```
-
 
 
 
@@ -97,56 +96,55 @@ Note that `r length(items$features)` features have matched our search criteria! 
 ## Building a Data Cube
 
 
-```{r}
-# Desired data cube shape & resolution
-v <- cube_view(srs = "EPSG:4326",
-               extent = list(t0 = as.character(start), 
-                            t1 = as.character(end),
-                            left = bbox[1], right = bbox[3],
-                            top = bbox[4], bottom = bbox[2]),
-               nx = 512, ny = 512, dt = "P1M")
-```
+
 
 
 ```{r}
 # RGB bands + cloud cover mask
 col <- stac_image_collection(items$features, 
-                             asset_names = c("B02", "B03", "B04", "Fmask"),
-                              # srs not in stac meta, so manually set instead:
-                             skip_image_metadata = TRUE,
-                             srs = srs
-                             )
+                             skip_image_metadata = TRUE, # srs not in stac meta!!
+                             srs = srs, 
+                             asset_names = c("B02", "B03", "B04", "Fmask"))
 
 # use a cloud mask -- see
 # https://lpdaac.usgs.gov/documents/1326/HLS_User_Guide_V2.pdf
-# or https://github.com/nasa/HLS-Data-Resources
-cloud_mask <- image_mask("Fmask", values=c(1,1,1), bits = c(1,2,3))
+
+cloud_mask <- image_mask("Fmask", bits=c(1,2,3), values = c(1,1,1))
 ```
 
-While we can pipe directly to a plot, stashing our resulting downscaled, reprojected cube as a local netcdf file makes it easy to reuse in future calculations:
+
+
+
+```{r}
+# Desired data cube shape & resolution
+v = cube_view(srs = srs,
+              extent = col,
+              nx = 512, ny = 512, dt = "P2M",
+              aggregation ="first", resampling = "near")
+```
+
 
 ```{r sf_bay}
-
-cache <- tempfile(fileext = ".nc")
+# Here we go! note eval is lazy
 
 bench::bench_time({
-raster_cube(col, v, mask=cloud_mask) |>
+  raster_cube(col, v, mask=cloud_mask) |>
   select_bands(c("B02","B03", "B04")) |>
-  write_ncdf(cache)
+  write_ncdf("tmp.nc", overwrite=TRUE)
+  
 })
 ```
 
-Now we can always load from the local data:
+```{r}
+ncdf_cube("nomask.nc") |>  plot(rgb=3:1)
+
+```
 
 ```{r}
-ncdf_cube(cache) |>  plot(rgb=3:1)
 ```
 
 
-## Comparison
 
-Direct AWS Access via element84 STAC collection. Does not include harmonized sentinel-landsat yet, but 
-is remarkably faster than NASA's AWS access via earthdatalogin redirections. 
 
 
 ```{r}
@@ -160,23 +158,22 @@ items <-
 
 col <- stac_image_collection(items$features, asset_names = c("B02", "B03", "B04", "SCL"))
 
-v <- cube_view(srs = "EPSG:4326",
+v = cube_view(srs = "EPSG:4326",
               extent = col,
-              nx = 512, ny = 512, dt = "P1M",
+              nx = 1024, ny = 1024, dt = "P1M",
               aggregation ="first", resampling = "near")
 
 mask <- image_mask("SCL", values=c(3, 8, 9)) # mask clouds and cloud shadows
 
-cache <- tempfile(fileext = ".nc")
-
 bench::bench_time({
   raster_cube(col, v, mask=mask) |>
   select_bands(c("B02","B03", "B04")) |>
-  write_ncdf(cache, overwrite=TRUE)
+  write_ncdf("tmp.nc", overwrite=TRUE)
   
 })
 
-ncdf_cube(cache) |>  plot(rgb=3:1)
+ncdf_cube("tmp.nc") |>  plot(rgb=3:1)
 
 ```
+
 
