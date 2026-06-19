@@ -62,11 +62,17 @@ edl_search <- function(short_name = NULL,
   #                                       prompt_for_netrc = FALSE)
 
 
-  edl_netrc(username = username,
-            password = password,
-            netrc_path = netrc_path,
-            cookie_path = cookie_path,
-            cloud_config = FALSE)
+  # Only (re)write the netrc when the caller explicitly supplies
+  # credentials, or when no earthdata netrc exists yet, so searching never
+  # clobbers credentials a user already stored with edl_netrc() (#27).
+  if (!missing(username) || !missing(password) ||
+      !has_edl_netrc(netrc_path)) {
+    edl_netrc(username = username,
+              password = password,
+              netrc_path = netrc_path,
+              cookie_path = cookie_path,
+              cloud_config = FALSE)
+  }
   netrc_config <-
     httr::config(netrc = TRUE,
                  netrc_file = netrc_path,
@@ -142,12 +148,14 @@ print.cmr_items <- function(x, ...) {
 #'
 edl_extract_urls <- function(items) {
   all_links <- purrr::map(items, "links")
-  urls <- purrr::map_chr(all_links, function(links) {
+  # A granule may carry multiple data assets (e.g. one tif per band), so map
+  # over granules and flatten -- map_chr would error on the >1 case (#15).
+  urls <- purrr::map(all_links, function(links) {
     is_data <-
       grepl("Download", purrr::map_chr(links, "title", .default="")) &
       grepl("\\/data#", purrr::map_chr(links, "rel", .default=""))
 
     purrr::map_chr(links[is_data], "href")
   })
-  urls
+  unlist(urls, use.names = FALSE)
 }
