@@ -18,8 +18,13 @@
 #' in a temporary file and provide this path as GDAL_HTTP_HEADER_FILE to
 #' improve compatibility with older versions.
 #'
-#' @param username EarthData Login User
-#' @param password EarthData Login Password
+#' @param username Earthdata Login user name. Defaults to the
+#'   `EARTHDATA_USER` environment variable, or else the login stored for
+#'   `urs.earthdata.nasa.gov` in `~/.netrc`. Register for a free account at
+#'   <https://urs.earthdata.nasa.gov>.
+#' @param password Earthdata Login password. Defaults to the
+#'   `EARTHDATA_PASSWORD` environment variable, or else the password stored
+#'   for `urs.earthdata.nasa.gov` in `~/.netrc`.
 #' @param token_number Which token (1 or 2)
 #' @param set_env_var Should we set the GDAL_HTTP_HEADER_FILE
 #' environmental variable?  logical, default TRUE.
@@ -97,9 +102,13 @@ edl_api <- function(endpoint,
                     method = httr::GET) {
 
   pw <- openssl::base64_encode(paste0(username, ":", password))
-  resp <- method(paste0(base, endpoint),
-  #                  ...,
-                    httr::add_headers(Authorization = paste("Basic", pw)))
+  verb <- if (identical(method, httr::POST)) "POST" else "GET"
+  # Retry brief connection failures and server errors, never 4xx responses
+  # such as 401 for bad credentials (a retry could lock the account).
+  resp <- httr::RETRY(verb, paste0(base, endpoint),
+                      httr::add_headers(Authorization = paste("Basic", pw)),
+                      times = 3, pause_base = 1, pause_cap = 5,
+                      terminate_on = 400:499, quiet = TRUE)
   httr::stop_for_status(resp)
   p <- httr::content(resp, "parsed", "application/json")
   p
@@ -155,11 +164,6 @@ edl_revoke_token <- function(
     password = default("password"),
     token_number = 1
 ){
-
-  if(username == "" || password == "") {
-    message("You must provide a username and password either in .Renviron\n",
-            "or using the optional arguments")
-  }
 
   p <- edl_api("/api/users/tokens", username, password)
   if(length(p) == 0) {

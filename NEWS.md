@@ -1,3 +1,49 @@
+# earthdatalogin 0.0.6
+
+## Breaking changes
+
+* `earthdatalogin` no longer supplies shared default credentials. The shared
+  account has expired, and NASA asks that each user log in with their own
+  Earthdata Login account. Credentials now come from the `username` and
+  `password` arguments, the `EARTHDATA_USER` and `EARTHDATA_PASSWORD`
+  environment variables, or the `urs.earthdata.nasa.gov` entry in
+  `~/.netrc`. If none of these provides credentials, functions that need
+  them stop with an error explaining how to register. The package no longer
+  downloads `inst/.Renviron` from GitHub or falls back to hard-coded
+  credentials.
+
+* `edl_search()` searches CMR anonymously when no credentials are
+  available, since CMR search does not require a login.
+
+## New features
+
+* New `edl_netrc_check()` verifies the credentials stored in a netrc file
+  against Earthdata Login. `edl_netrc()` now runs this check and warns if
+  the credentials are missing, rejected, or cannot be verified. It returns
+  `TRUE` if they were accepted, `FALSE` if they are missing or rejected, and
+  `NA` if they could not be verified, all invisibly. Use `check = FALSE` to
+  skip the request (#30, #31, @rupesh2).
+
+## Minor improvements and fixes
+
+* Requests to the Earthdata Login API (`edl_set_token()`,
+  `edl_revoke_token()` and `edl_netrc_check()`) retry brief connection
+  failures and server errors up to three times. They never retry 4xx
+  responses such as a 401 for bad credentials, which could lock the account.
+
+* The deprecated `collections_fetch()` warns once instead of once per page.
+
+* `edl_download()` now stops with an error when the server returns an HTTP
+  error, and removes the partial file. Previously the `"httr"` method saved
+  the server's error page to `dest` without complaint, and the `"curl"`
+  method did the same. The `"httr"` method also retries brief connection
+  failures and server errors up to three times.
+
+* `edl_netrc()` no longer writes to `~/.netrc` unless GDAL is older than 3.7,
+  which cannot read a netrc file from any other location. Even then it links
+  its own netrc there for the session only when `~/.netrc` does not exist,
+  and it never appends to an existing `~/.netrc`.
+
 # earthdatalogin 0.0.5
 
 * `edl_download()`, `edl_search()`, and `edl_netrc()` no longer overwrite
@@ -9,7 +55,7 @@
 
 * `edl_extract_urls()` (and `edl_search(parse_results = TRUE)`) now handle
   granules with multiple data assets, e.g. one GeoTIFF per band. Previously
-  these errored with "Result must be length 1" (#15).
+  these failed with "Result must be length 1" (#15).
 
 * `collections_fetch()` is deprecated in favor of `rstac::collections_fetch()`,
   which now provides this functionality upstream (#17).
@@ -19,7 +65,7 @@
 * Tests no longer attempt network access on CRAN. The `netcdf access` test now
   skips on CRAN and when offline, and the `get_nasa_stac_url()` error-path test
   is mocked so it runs without network access. This resolves the CRAN check
-  ERRORs introduced when the protected NetCDF download ran on CRAN machines.
+  errors introduced when the protected NetCDF download ran on CRAN machines.
 
 # earthdatalogin 0.0.3
 

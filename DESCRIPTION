@@ -1,6 +1,6 @@
 Package: earthdatalogin
 Title: NASA 'EarthData' Access Utilities
-Version: 0.0.5
+Version: 0.0.6
 Authors@R: 
   c(person(given = "Carl", family = "Boettiger", , "cboettig@gmail.com", c("aut", "cre", "cph"),
          comment = c(ORCID = "0000-0002-1642-628X")),
@@ -30,19 +30,19 @@ Description: Providing easy, portable access to NASA 'EarthData' products
   'sf', etc.)
 License: MIT + file LICENSE
 Encoding: UTF-8
-RoxygenNote: 7.3.2
 Depends: R (>= 4.1.0)
 Imports: httr, openssl, purrr, utils, base64enc, httr2, jsonlite
 Suggests: knitr, rmarkdown, terra (>= 1.7.39), rsconnect, testthat (>=
-        3.0.0), curl, sf, fs, readr, spelling, gdalcubes, rstac
+        3.0.0), curl, sf, fs, readr, spelling, gdalcubes, rstac, withr
 URL: https://boettiger-lab.github.io/earthdatalogin/,
         https://github.com/boettiger-lab/earthdatalogin
 BugReports: https://github.com/boettiger-lab/earthdatalogin/issues
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
+Config/roxygen2/version: 8.1.1
 NeedsCompilation: no
-Packaged: 2026-06-19 19:51:17 UTC; jovyan
+Packaged: 2026-11-17 23:52:38 UTC; jovyan
 Author: Carl Boettiger [aut, cre, cph] (ORCID:
     <https://orcid.org/0000-0002-1642-628X>),
   Luis López [aut] (ORCID: <https://orcid.org/0000-0003-4896-3263>),
@@ -52,4 +52,4 @@ Author: Carl Boettiger [aut, cre, cph] (ORCID:
   Openscapes [fnd]
 Maintainer: Carl Boettiger <cboettig@gmail.com>
 Repository: CRAN
-Date/Publication: 2026-06-19 20:30:02 UTC
+Date/Publication: 2026-11-18 03:40:02 UTC

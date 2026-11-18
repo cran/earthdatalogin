@@ -1,5 +1,11 @@
 test_that("edl_netrc and edl_download do not overwrite stored credentials", {
-  # No network needed: we only check what gets written to the netrc file.
+  # No network needed: we only check what gets written to the netrc file,
+  # so the Earthdata Login credential check is mocked out.
+  local_mocked_bindings(
+    urs_auth_response = function(...) list(status = 200L, reason = "")
+  )
+  home <- withr::local_tempdir()
+  withr::local_envvar(HOME = home, R_USER = home)
   netrc <- tempfile()
   cookie <- tempfile()
   on.exit(unlink(c(netrc, cookie)), add = TRUE)
@@ -33,11 +39,12 @@ test_that("edl_netrc and edl_download do not overwrite stored credentials", {
 })
 
 test_that("edl_netrc", {
-  skip_on_cran()
-  skip_if_offline()
+  skip_online()
+  skip_if_no_edl_credentials()
 
   # test in clean setting
   edl_unset_token()
+  edl_unset_netrc()
   unlink(edl_cookie_path())
 
   # here we go
@@ -52,8 +59,8 @@ test_that("edl_netrc", {
 
 
 test_that("netcdf access", {
-  skip_on_cran()
-  skip_if_offline()
+  skip_online()
+  skip_if_no_edl_credentials()
 
   # Since GDAL 2.4 libnetcdf >= 4.5, Mac and Windos lack netcdf vsi support
   # https://gdal.org/en/stable/drivers/raster/netcdf.html#vsi-virtual-file-system-api-support
@@ -68,7 +75,21 @@ test_that("netcdf access", {
     # Sys.setenv(GDAL_SKIP="netCDF") # doesn't work
   }
 
-  r <- terra::rast(url, vsi = TRUE, drivers = driver)
+  # On some CI runs GDAL reports this file as an unsupported format, which
+  # usually means the server sent something other than the file. Retry a few
+  # times with GDAL's cache off for this URL, and if every attempt fails,
+  # report what the server returns so the cause can be found.
+  withr::local_envvar(CPL_VSIL_CURL_NON_CACHED = paste0("/vsicurl/", url))
+  for (attempt in 1:3) {
+    r <- tryCatch(terra::rast(url, vsi = TRUE, drivers = driver),
+                  error = function(e) e)
+    if (!inherits(r, "error")) break
+    Sys.sleep(5)
+  }
+  if (inherits(r, "error")) {
+    stop(conditionMessage(r), "\n\n", edl_request_diagnostics(url),
+         call. = FALSE)
+  }
   expect_true(inherits(r, "SpatRaster"))
 
   edl_unset_netrc()
